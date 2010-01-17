@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style type="text/css">
+        .list {float: left; padding: 1em; margin: 1em;}
+        .active {background-color: #73e573;}
+        #debug {clear: left;}
+    </style>
+    <title>Shortcuts</title>
+</head>
+<body>
+
+<p>Feedback: @ <a href="mailto:stepan.reznikov@gmail.com">Stepan Reznikov</a> | <a href="http://github.com/stepanvr/js-shortcuts">GitHub</a></p>
+
+<div class="list active">
+    <p>'default' list: Ctrl+A (down), Shift+B (up)</p>
+    <form><input type="hidden" name="list" value="default"/><input type="button" value="Activate"/></form>
+</div>
+
+<div class="list">
+    <p>'test' list: Shift+Up (hold)</p>
+    <form><input type="hidden" name="list" value="test"/><input type="button" value="Activate"/></form>
+</div>
+
+<div id="debug"></div>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+<script type="text/javascript" src="shortcuts.js"></script>
+
+<script type="text/javascript">
+var debug = function(msg) {
+    var node = document.getElementById('debug');
+    node.innerHTML += msg + ' ';
+};
+
+$('.list input[type=button]').click(function() {
+    var name = $(this).closest('form').find('input[name=list]').val();
+    Shortcuts.setList(name);
+    $('.list').removeClass('active');
+    $(this).closest('.list').addClass('active');
+    $(this).blur();
+});
+
+Shortcuts.add({
+    type: 'down',
+    mask: 'Ctrl+A',
+    handler: function() {
+        debug('Ctrl+A');
+    }
+});
+
+Shortcuts.add({
+    type: 'up',
+    mask: 'Shift+B',
+    handler: function() {
+        debug('Shift+B');
+    }
+});
+
+Shortcuts.add({
+    type: 'hold',
+    mask: 'Shift+Up',
+    handler: function() {
+        debug('Shift+Up');
+    },
+    list: 'test'
+});
+</script>
+
+</body>
+</html>
