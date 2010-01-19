@@ -100,7 +100,7 @@ var Shortcuts = {
 
     /**
      * Установить список шорткатов активным.
-     * @param {Object} name Название списка.
+     * @param {String} name Название списка.
      */
     setList: function(name) {
         this.activeList = this.lists[name];
