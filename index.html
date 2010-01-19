@@ -5,6 +5,10 @@
     <style type="text/css">
         .list {float: left; padding: 1em; margin: 1em;}
         .active {background-color: #73e573;}
+        ul, li, p {margin: 0; padding: 0;}
+        p {margin: 0 0 0.6em 0;}
+        ul {margin: 0 0 1.2em 0; list-style-type: none;}
+        ul li {margin: 0 0 0.3em 0;}
         #debug {clear: left;}
     </style>
     <title>Shortcuts</title>
@@ -14,12 +18,14 @@
 <p>Feedback: @ <a href="mailto:stepan.reznikov@gmail.com">Stepan Reznikov</a> | <a href="http://github.com/stepanvr/js-shortcuts">GitHub</a></p>
 
 <div class="list active">
-    <p>'default' list: Ctrl+A (down), Shift+B (up)</p>
+    <p>'default' list:</p>
+    <ul><li>Ctrl+A (down)</li><li>Shift+B (up)</li></ul>
     <form><input type="hidden" name="list" value="default"/><input type="button" value="Activate"/></form>
 </div>
 
 <div class="list">
-    <p>'test' list: Shift+Up (hold)</p>
+    <p>'test' list:</p>
+    <ul><li>Shift+Up (hold)</li><li>Delete (down)</li></ul>
     <form><input type="hidden" name="list" value="test"/><input type="button" value="Activate"/></form>
 </div>
 
@@ -66,6 +72,16 @@ Shortcuts.add({
     },
     list: 'test'
 });
+
+Shortcuts.add({
+    mask: 'Delete',
+    handler: function() {
+        debug('Delete');
+    },
+    list: 'test'
+});
+
+Shortcuts.init();
 </script>
 
 </body>
