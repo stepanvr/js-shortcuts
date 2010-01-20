@@ -16,7 +16,7 @@ var Shortcuts = {
     /** В этом хеше запоминаем какие клавиши нажаты в данный момент. Ключ - ASCII-код клавиши (e.which), значение - true/false. */
     pressed: {},
 
-    init: function() {
+    start: function() {
         var that = this;
 
         $(document).bind($.browser.opera ? 'keypress' : 'keydown', function(e) {

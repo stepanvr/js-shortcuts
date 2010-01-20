@@ -1,0 +1,7 @@
+#outer {
+    height: 100%;
+}
+
+#usage, #example {
+    display: inline;
+}
