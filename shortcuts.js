@@ -21,15 +21,15 @@ var Shortcuts = {
 
         $(document).bind($.browser.opera ? 'keypress' : 'keydown', function(e) {
             if (!that.pressed[e.which]) {
-                that.runShortcuts('down', e);
+                that.run('down', e);
             }
             that.pressed[e.which] = true;
-            that.runShortcuts('hold', e);
+            that.run('hold', e);
         });
 
         $(document).bind('keyup', function(e) {
             that.pressed[e.which] = false;
-            that.runShortcuts('up', e);
+            that.run('up', e);
         });
     },
 
@@ -74,7 +74,7 @@ var Shortcuts = {
 
         list[key].push(params);
 
-        if (!this.activeList) { // Если еще нет активного списка, то активируем текущий
+        if (!this.active) { // Если еще нет активного списка, то активируем текущий
             this.setList(params.list);
         }
     },
@@ -103,7 +103,7 @@ var Shortcuts = {
      * @param {String} name Название списка.
      */
     setList: function(name) {
-        this.activeList = this.lists[name];
+        this.active = this.lists[name];
     },
 
     getKey: function(type, maskObj) {
@@ -140,8 +140,8 @@ var Shortcuts = {
         return obj;
     },
 
-    runShortcuts: function(type, e) {
-        if (!this.activeList) { return; }
+    run: function(type, e) {
+        if (!this.active) { return; }
 
         var maskObj = {
             ctrl: e.ctrlKey,
@@ -152,7 +152,7 @@ var Shortcuts = {
 
         var isInput = this.isInput(e.target);
         var key = this.getKey(type, maskObj);    // Получаем по типу события и маске ключ
-        var shortcuts = this.activeList[key]; // Получаем по ключу шорткаты
+        var shortcuts = this.active[key]; // Получаем по ключу шорткаты
 
         if (shortcuts && shortcuts.length > 0) {
             e.preventDefault();
