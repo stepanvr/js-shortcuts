@@ -24,6 +24,10 @@ h1 {
     font-size: 2em;
 }
 
+h1 small {
+    font-size: 0.5em;
+}
+
 h2 {
     font-size: 1.5em;
 }
@@ -110,4 +114,8 @@ ul li {
 
 #debug {
     clear: left;
+}
+
+.test {
+    font-size: 0.8em;
 }

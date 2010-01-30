@@ -1,11 +1,15 @@
 /**
- * JavaScript Shortcuts Library v0.2
+ * JavaScript Shortcuts Library (jQuery plugin) v0.3
  * http://www.stepanreznikov.com/js-shortcuts/
  * Copyright (c) 2010 Stepan Reznikov (stepan.reznikov@gmail.com)
- * Date: 2010-01-19
+ * Date: 2010-01-30
  */
 
-var Shortcuts = {
+/*global jQuery */
+
+(function($) {
+
+$.Shortcuts = {
 
     /** Специальные клавиши */
     special: {'backspace': 8, 'tab': 9, 'enter': 13, 'pause': 19, 'capslock': 20, 'esc': 27, 'space': 32, 'pageup': 33, 'pagedown': 34, 'end': 35, 'home': 36, 'left': 37, 'up': 38, 'right': 39, 'down': 40, 'insert': 45, 'delete': 46, 'f1': 112, 'f2': 113, 'f3': 114, 'f4': 115, 'f5': 116, 'f6': 117, 'f7': 118, 'f8': 119, 'f9': 120, 'f10': 121, 'f11': 122, 'f12': 123, '?': 191},
@@ -16,6 +20,7 @@ var Shortcuts = {
     /** В этом хеше запоминаем какие клавиши нажаты в данный момент. Ключ - ASCII-код клавиши (e.which), значение - true/false. */
     pressed: {},
 
+    /** Начать реагировать на шорткаты. Навешиваем обработчики событий. */
     start: function() {
         var that = this;
 
@@ -50,12 +55,12 @@ var Shortcuts = {
      *     Строка нечувствительна к регистру.
      * 
      * @param {Boolean} [params.enableInInput] Разрешить выполнение шортката внутри полей ввода. По умолчанию запрещено.
-     * @param {Function} params.handler Обработчик события.
+     * @param {Function} params.handler Обработчик события. В качестве первого параметра будет передан event object.
      * @param {String}  [params.list] В какой список добавить шорткат. По умолчанию шорткат заносится в список default.
      */
     add: function(params) {
-        if (!params.mask) { throw new Error("Shortcuts.add: required parameter 'params.mask' is undefined."); }
-        if (!params.handler) { throw new Error("Shortcuts.add: required parameter 'params.handler' is undefined."); }
+        if (!params.mask) { throw new Error("$.Shortcuts.add: required parameter 'params.mask' is undefined."); }
+        if (!params.handler) { throw new Error("$.Shortcuts.add: required parameter 'params.handler' is undefined."); }
         if (!params.type) { params.type = 'down'; }
         if (!params.list) { params.list = 'default'; }
 
@@ -87,7 +92,7 @@ var Shortcuts = {
      * @param {String} [params.list] Из какого списка удалить шорткат. По умолчанию default.
      */
     remove: function(params) {
-        if (!params.mask) { throw new Error("Shortcuts.add: required parameter 'params.mask' is undefined."); }
+        if (!params.mask) { throw new Error("$.Shortcuts.remove: required parameter 'params.mask' is undefined."); }
         if (!params.type) { params.type = 'down'; }
         if (!params.list) { params.list = 'default'; }
 
@@ -151,7 +156,7 @@ var Shortcuts = {
         };
 
         var isInput = this.isInput(e.target);
-        var key = this.getKey(type, maskObj);    // Получаем по типу события и маске ключ
+        var key = this.getKey(type, maskObj); // Получаем по типу события и маске ключ
         var shortcuts = this.active[key]; // Получаем по ключу шорткаты
 
         if (shortcuts && shortcuts.length > 0) {
@@ -159,7 +164,7 @@ var Shortcuts = {
             for (var i = 0, len = shortcuts.length; i < len; i += 1) {
                 // Если не в инпуте или для данного шортката разрешено выполнение в инпутах
                 if (!isInput || shortcuts[i].enableInInput) {
-                    shortcuts[i].handler(); // Выполняем шорткат
+                    shortcuts[i].handler(e); // Выполняем шорткат
                 }
             }
         }
@@ -176,3 +181,5 @@ var Shortcuts = {
         }
     }
 };
+
+}(jQuery));
