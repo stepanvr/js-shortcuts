@@ -168,7 +168,7 @@ $.Shortcuts = {
                         e.preventDefault();
                         isPrevented = true;
                     }
-                    this._run(shortcuts[i], e); // Выполняем шорткат
+                    shortcuts[i].handler(e); // Выполняем шорткат
                 }
             }
         }
