@@ -158,13 +158,17 @@ $.Shortcuts = {
         var isInput = this.isInput(e.target);
         var key = this.getKey(type, maskObj); // Получаем по типу события и маске ключ
         var shortcuts = this.active[key]; // Получаем по ключу шорткаты
+        var isPrevented = false;
 
         if (shortcuts && shortcuts.length > 0) {
-            e.preventDefault();
             for (var i = 0, len = shortcuts.length; i < len; i += 1) {
                 // Если не в инпуте или для данного шортката разрешено выполнение в инпутах
                 if (!isInput || shortcuts[i].enableInInput) {
-                    shortcuts[i].handler(e); // Выполняем шорткат
+                    if (!isPrevented) {
+                        e.preventDefault();
+                        isPrevented = true;
+                    }
+                    this._run(shortcuts[i], e); // Выполняем шорткат
                 }
             }
         }
