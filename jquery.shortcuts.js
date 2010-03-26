@@ -155,6 +155,10 @@ $.Shortcuts = {
             which: e.which
         };
 
+        if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) {
+            maskObj.which = e.which - 32;
+        }
+
         var isInput = this.isInput(e.target);
         var key = this.getKey(type, maskObj); // Получаем по типу события и маске ключ
         var shortcuts = this.active[key]; // Получаем по ключу шорткаты
