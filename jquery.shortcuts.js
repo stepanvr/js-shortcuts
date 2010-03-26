@@ -1,117 +1,28 @@
 /**
- * JavaScript Shortcuts Library (jQuery plugin) v0.3
+ * JavaScript Shortcuts Library (jQuery plugin) v0.4
  * http://www.stepanreznikov.com/js-shortcuts/
  * Copyright (c) 2010 Stepan Reznikov (stepan.reznikov@gmail.com)
- * Date: 2010-01-30
+ * Date: 2010-03-18
  */
 
 /*global jQuery */
 
 (function($) {
 
-$.Shortcuts = {
-
     /** Специальные клавиши */
-    special: {'backspace': 8, 'tab': 9, 'enter': 13, 'pause': 19, 'capslock': 20, 'esc': 27, 'space': 32, 'pageup': 33, 'pagedown': 34, 'end': 35, 'home': 36, 'left': 37, 'up': 38, 'right': 39, 'down': 40, 'insert': 45, 'delete': 46, 'f1': 112, 'f2': 113, 'f3': 114, 'f4': 115, 'f5': 116, 'f6': 117, 'f7': 118, 'f8': 119, 'f9': 120, 'f10': 121, 'f11': 122, 'f12': 123, '?': 191},
+    var special = {'backspace': 8, 'tab': 9, 'enter': 13, 'pause': 19, 'capslock': 20, 'esc': 27, 'space': 32, 'pageup': 33, 'pagedown': 34, 'end': 35, 'home': 36, 'left': 37, 'up': 38, 'right': 39, 'down': 40, 'insert': 45, 'delete': 46, 'f1': 112, 'f2': 113, 'f3': 114, 'f4': 115, 'f5': 116, 'f6': 117, 'f7': 118, 'f8': 119, 'f9': 120, 'f10': 121, 'f11': 122, 'f12': 123, '?': 191};
 
     /** Хеш со списками шорткатов */
-    lists: {},
+    var lists = {};
 
     /** В этом хеше запоминаем какие клавиши нажаты в данный момент. Ключ - ASCII-код клавиши (e.which), значение - true/false. */
-    pressed: {},
+    var pressed = {};
 
-    /** Начать реагировать на шорткаты. Навешиваем обработчики событий. */
-    start: function() {
-        var that = this;
+    var isStarted = false;
 
-        $(document).bind($.browser.opera ? 'keypress' : 'keydown', function(e) {
-            if (!that.pressed[e.which]) {
-                that.run('down', e);
-            }
-            that.pressed[e.which] = true;
-            that.run('hold', e);
-        });
+    var active;
 
-        $(document).bind('keyup', function(e) {
-            that.pressed[e.which] = false;
-            that.run('up', e);
-        });
-    },
-
-    /**
-     * Добавить шорткат.
-     * @param {Object}   params Параметры шортката.
-     * @param {String}  [params.type] Тип события по которому будет срабатывать обработчик.
-     *     Возможные значения:
-     *     down – На нажатие клавиши (сочетания клавиш). Значение по умолчанию.
-     *     up   – На отпускание клавиши.
-     *     hold – На нажатие и удержание клавиши. Обработчик будет вызван сразу после нажатия
-     *            и потом будет вызываться с некоторой периодичностью пока нажата клавиша.
-     * 
-     * @param {String}   params.mask Строка задающая сочетание клавиш.
-     *     Примеры: 'Down', 'Esc', 'Shift+Up', 'ctrl+a'.
-     *     Строка состоит из имен клавиш разделенных плюсами.
-     *     Может быть не более одной клавиши отличной от Ctrl, Shift или Alt.
-     *     Строка нечувствительна к регистру.
-     * 
-     * @param {Boolean} [params.enableInInput] Разрешить выполнение шортката внутри полей ввода. По умолчанию запрещено.
-     * @param {Function} params.handler Обработчик события. В качестве первого параметра будет передан event object.
-     * @param {String}  [params.list] В какой список добавить шорткат. По умолчанию шорткат заносится в список default.
-     */
-    add: function(params) {
-        if (!params.mask) { throw new Error("$.Shortcuts.add: required parameter 'params.mask' is undefined."); }
-        if (!params.handler) { throw new Error("$.Shortcuts.add: required parameter 'params.handler' is undefined."); }
-        if (!params.type) { params.type = 'down'; }
-        if (!params.list) { params.list = 'default'; }
-
-        var maskObj = this.getMaskObject(params.mask);
-        var key = this.getKey(params.type, maskObj);
-
-        if (!this.lists[params.list]) {
-            this.lists[params.list] = {};
-        }
-
-        var list = this.lists[params.list];
-
-        if (!list[key]) {
-            list[key] = [];
-        }
-
-        list[key].push(params);
-
-        if (!this.active) { // Если еще нет активного списка, то активируем текущий
-            this.setList(params.list);
-        }
-    },
-
-    /**
-     * Удалить шорткат.
-     * @param {Object}  params       Параметры.
-     * @param {String} [params.type] Тип события (down|up|hold). По умолчанию down.
-     * @param {String}  params.mask  Строка задающая сочетание клавиш.
-     * @param {String} [params.list] Из какого списка удалить шорткат. По умолчанию default.
-     */
-    remove: function(params) {
-        if (!params.mask) { throw new Error("$.Shortcuts.remove: required parameter 'params.mask' is undefined."); }
-        if (!params.type) { params.type = 'down'; }
-        if (!params.list) { params.list = 'default'; }
-
-        if (this.lists[params.list]) {
-            var maskObj = this.getMaskObject(params.mask);
-            var key = this.getKey(params.type, maskObj);
-            delete this.lists[params.list][key];
-        }
-    },
-
-    /**
-     * Установить список шорткатов активным.
-     * @param {String} name Название списка.
-     */
-    setList: function(name) {
-        this.active = this.lists[name];
-    },
-
-    getKey: function(type, maskObj) {
+    var getKey = function(type, maskObj) {
         var key = '';
 
         key += type;
@@ -125,9 +36,9 @@ $.Shortcuts = {
         }
 
         return key;
-    },
+    };
 
-    getMaskObject: function(mask) {
+    var getMaskObject = function(mask) {
         var obj = {};
         var items = mask.toLowerCase().replace(/\s+/g, '').split(/\+/);
         var item;
@@ -138,15 +49,26 @@ $.Shortcuts = {
             if (item === 'ctrl' || item === 'alt' || item === 'shift') {
                 obj[item] = true;
             } else {
-                obj.which = this.special[item] || item.toUpperCase().charCodeAt();
+                obj.which = special[item] || item.toUpperCase().charCodeAt();
             }
         }
 
         return obj;
-    },
+    };
 
-    run: function(type, e) {
-        if (!this.active) { return; }
+    var checkIsInput = function(target) {
+        var name = target.tagName.toLowerCase();
+        var type = target.type;
+
+        if ((name === 'input' && (type === 'text' || type === 'password' || type === 'file' || type === 'search')) || name === 'textarea') {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    var run = function(type, e) {
+        if (!active) { return; }
 
         var maskObj = {
             ctrl: e.ctrlKey,
@@ -176,18 +98,97 @@ $.Shortcuts = {
                 }
             }
         }
-    },
+    };
 
-    isInput: function(target) {
-        var name = target.tagName.toLowerCase();
-        var type = target.type;
+    $.Shortcuts = {};
 
-        if ((name === 'input' && (type === 'text' || type === 'password' || type === 'file' || type === 'search')) || name === 'textarea') {
-            return true;
-        } else {
-            return false;
+    /** Начать реагировать на шорткаты. Навешиваем обработчики событий. */
+    $.Shortcuts.start = function(list) {
+        list = list || 'default';
+        active = lists[list]; // Устанавливаем список шорткатов активным
+
+        if (!isStarted) {
+            $(document).bind(($.browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
+                if (!pressed[e.which]) {
+                    run('down', e);
+                }
+                pressed[e.which] = true;
+                run('hold', e);
+            });
+
+            $(document).bind('keyup.shortcuts', function(e) {
+                pressed[e.which] = false;
+                run('up', e);
+            });
+
+            isStarted = true;
         }
-    }
-};
+    };
+
+    $.Shortcuts.stop = function() {
+        $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
+        isStarted = false;
+    };
+
+    /**
+     * Добавить шорткат.
+     * @param {Object}   params Параметры шортката.
+     * @param {String}  [params.type] Тип события по которому будет срабатывать обработчик.
+     *     Возможные значения:
+     *     down – На нажатие клавиши (сочетания клавиш). Значение по умолчанию.
+     *     up   – На отпускание клавиши.
+     *     hold – На нажатие и удержание клавиши. Обработчик будет вызван сразу после нажатия
+     *            и потом будет вызываться с некоторой периодичностью пока нажата клавиша.
+     * 
+     * @param {String}   params.mask Строка задающая сочетание клавиш.
+     *     Примеры: 'Down', 'Esc', 'Shift+Up', 'ctrl+a'.
+     *     Строка состоит из имен клавиш разделенных плюсами.
+     *     Может быть не более одной клавиши отличной от Ctrl, Shift или Alt.
+     *     Строка нечувствительна к регистру.
+     * 
+     * @param {Boolean} [params.enableInInput] Разрешить выполнение шортката внутри полей ввода. По умолчанию запрещено.
+     * @param {Function} params.handler Обработчик события. В качестве первого параметра будет передан event object.
+     * @param {String}  [params.list] В какой список добавить шорткат. По умолчанию шорткат заносится в список default.
+     */
+    $.Shortcuts.add = function(params) {
+        if (!params.mask) { throw new Error("$.Shortcuts.add: required parameter 'params.mask' is undefined."); }
+        if (!params.handler) { throw new Error("$.Shortcuts.add: required parameter 'params.handler' is undefined."); }
+        params.type = params.type || 'down';
+        params.list = params.list || 'default';
+
+        var maskObj = getMaskObject(params.mask);
+        var key = getKey(params.type, maskObj);
+
+        if (!lists[params.list]) {
+            lists[params.list] = {};
+        }
+
+        var list = lists[params.list];
+
+        if (!list[key]) {
+            list[key] = [];
+        }
+
+        list[key].push(params);
+    };
+
+    /**
+     * Удалить шорткат.
+     * @param {Object}  params       Параметры.
+     * @param {String} [params.type] Тип события (down|up|hold). По умолчанию down.
+     * @param {String}  params.mask  Строка задающая сочетание клавиш.
+     * @param {String} [params.list] Из какого списка удалить шорткат. По умолчанию default.
+     */
+    $.Shortcuts.remove = function(params) {
+        if (!params.mask) { throw new Error("$.Shortcuts.remove: required parameter 'params.mask' is undefined."); }
+        params.type = params.type || 'down';
+        params.list = params.list || 'default';
+
+        if (lists[params.list]) {
+            var maskObj = getMaskObject(params.mask);
+            var key = getKey(params.type, maskObj);
+            delete lists[params.list][key];
+        }
+    };
 
 }(jQuery));

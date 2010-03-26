@@ -42,9 +42,9 @@
     list: <span style='color:#2a00ff;'>'another'</span>
 });</pre>
 
-<h3>Activate a list:</h3>
+<h3>Activate "another" list:</h3>
 
-<pre style='color:#000000;background:#ffffff;'>$.Shortcuts.setList(<span style='color:#2a00ff;'>'another'</span>);</pre>
+<pre style='color:#000000;background:#ffffff;'>$.Shortcuts.start(<span style='color:#2a00ff;'>'another'</span>);</pre>
 
 <h3>Remove a shortcut:</h3>
 
@@ -53,6 +53,10 @@
     mask: <span style='color:#2a00ff;'>'Shift+Up'</span>,
     list: <span style='color:#2a00ff;'>'another'</span>
 });</pre>
+
+<h3>Stop (unbind event listeners):</h3>
+
+<pre style='color:#000000;background:#ffffff;'>$.Shortcuts.stop();</pre>
 
 <h3>Supported Keys</h3>
 
@@ -109,7 +113,7 @@ var debug = function(msg) {
 
 $('.list input[type=button]').click(function() {
     var name = $(this).closest('form').find('input[name=list]').val();
-    $.Shortcuts.setList(name);
+    $.Shortcuts.start(name);
     $('.list').removeClass('active');
     $(this).closest('.list').addClass('active');
     $(this).blur();
