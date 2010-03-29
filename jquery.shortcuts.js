@@ -77,10 +77,6 @@
             which: e.which
         };
 
-        if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) {
-            maskObj.which = e.which - 32;
-        }
-
         var isInput = checkIsInput(e.target);
         var key = getKey(type, maskObj); // Получаем по типу события и маске ключ
         var shortcuts = active[key]; // Получаем по ключу шорткаты
@@ -109,6 +105,9 @@
 
         if (!isStarted) {
             $(document).bind(($.browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
+                if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) {
+                    e.which = e.which - 32;
+                }
                 if (!pressed[e.which]) {
                     run('down', e);
                 }
