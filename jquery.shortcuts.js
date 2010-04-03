@@ -40,18 +40,15 @@
 
     var getMaskObject = function(mask) {
         var obj = {};
-        var items = mask.toLowerCase().replace(/\s+/g, '').split(/\+/);
-        var item;
+        var items = mask.split('+');
 
-        for (var i = 0, len = items.length; i < len; i += 1) {
-            item = items[i];
-
+        $.each(items, function(i, item) {
             if (item === 'ctrl' || item === 'alt' || item === 'shift') {
                 obj[item] = true;
             } else {
                 obj.which = special[item] || item.toUpperCase().charCodeAt();
             }
-        }
+        });
 
         return obj;
     };
@@ -80,20 +77,21 @@
         var isInput = checkIsInput(e.target);
         var key = getKey(type, maskObj); // Получаем по типу события и маске ключ
         var shortcuts = active[key]; // Получаем по ключу шорткаты
+
+        if (!shortcuts) { return; }
+
         var isPrevented = false;
 
-        if (shortcuts && shortcuts.length > 0) {
-            for (var i = 0, len = shortcuts.length; i < len; i += 1) {
-                // Если не в инпуте или для данного шортката разрешено выполнение в инпутах
-                if (!isInput || shortcuts[i].enableInInput) {
-                    if (!isPrevented) {
-                        e.preventDefault();
-                        isPrevented = true;
-                    }
-                    shortcuts[i].handler(e); // Выполняем шорткат
+        $.each(shortcuts, function(i, shortcut) {
+            // Если не в инпуте или для данного шортката разрешено выполнение в инпутах
+            if (!isInput || shortcut.enableInInput) {
+                if (!isPrevented) {
+                    e.preventDefault();
+                    isPrevented = true;
                 }
+                shortcut.handler(e); // Выполняем шорткат
             }
-        }
+        });
     };
 
     $.Shortcuts = {};
@@ -152,23 +150,28 @@
     $.Shortcuts.add = function(params) {
         if (!params.mask) { throw new Error("$.Shortcuts.add: required parameter 'params.mask' is undefined."); }
         if (!params.handler) { throw new Error("$.Shortcuts.add: required parameter 'params.handler' is undefined."); }
+
         params.type = params.type || 'down';
         params.list = params.list || 'default';
 
-        var maskObj = getMaskObject(params.mask);
-        var key = getKey(params.type, maskObj);
+        var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
 
-        if (!lists[params.list]) {
-            lists[params.list] = {};
-        }
+        $.each(masks, function(i, mask) {
+            var maskObj = getMaskObject(mask);
+            var key = getKey(params.type, maskObj);
 
-        var list = lists[params.list];
+            if (!lists[params.list]) {
+                lists[params.list] = {};
+            }
 
-        if (!list[key]) {
-            list[key] = [];
-        }
+            var list = lists[params.list];
 
-        list[key].push(params);
+            if (!list[key]) {
+                list[key] = [];
+            }
+
+            list[key].push(params);
+        });
     };
 
     /**
@@ -183,11 +186,15 @@
         params.type = params.type || 'down';
         params.list = params.list || 'default';
 
-        if (lists[params.list]) {
-            var maskObj = getMaskObject(params.mask);
+        if (!lists[params.list]) { return; }
+
+        var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
+
+        $.each(masks, function(i, mask) {
+            var maskObj = getMaskObject(mask);
             var key = getKey(params.type, maskObj);
             delete lists[params.list][key];
-        }
+        });
     };
 
 }(jQuery));
