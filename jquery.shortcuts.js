@@ -1,8 +1,8 @@
 /**
- * JavaScript Shortcuts Library (jQuery plugin) v0.4
+ * JavaScript Shortcuts Library (jQuery plugin) v0.5
  * http://www.stepanreznikov.com/js-shortcuts/
  * Copyright (c) 2010 Stepan Reznikov (stepan.reznikov@gmail.com)
- * Date: 2010-03-18
+ * Date: 2010-04-04
  */
 
 /*global jQuery */
@@ -10,7 +10,40 @@
 (function($) {
 
     /** Специальные клавиши */
-    var special = {'backspace': 8, 'tab': 9, 'enter': 13, 'pause': 19, 'capslock': 20, 'esc': 27, 'space': 32, 'pageup': 33, 'pagedown': 34, 'end': 35, 'home': 36, 'left': 37, 'up': 38, 'right': 39, 'down': 40, 'insert': 45, 'delete': 46, 'f1': 112, 'f2': 113, 'f3': 114, 'f4': 115, 'f5': 116, 'f6': 117, 'f7': 118, 'f8': 119, 'f9': 120, 'f10': 121, 'f11': 122, 'f12': 123, '?': 191};
+    var special = {
+        'backspace': 8,
+        'tab': 9,
+        'enter': 13,
+        'pause': 19,
+        'capslock': 20,
+        'esc': 27,
+        'space': 32,
+        'pageup': 33,
+        'pagedown': 34,
+        'end': 35,
+        'home': 36,
+        'left': 37,
+        'up': 38,
+        'right': 39,
+        'down': 40,
+        'insert': 45,
+        'delete': 46,
+        'f1': 112,
+        'f2': 113,
+        'f3': 114,
+        'f4': 115,
+        'f5': 116,
+        'f6': 117,
+        'f7': 118,
+        'f8': 119,
+        'f9': 120,
+        'f10': 121,
+        'f11': 122,
+        'f12': 123,
+        '?': 191, // Question Mark
+        'minus': $.browser.opera ? [109, 45] : $.browser.mozilla ? 109 : [189, 109],
+        'plus': $.browser.opera ? [61, 43] : $.browser.mozilla ? [61, 107] : [187, 107]
+    };
 
     /** Хеш со списками шорткатов */
     var lists = {};
@@ -23,19 +56,26 @@
     var active;
 
     var getKey = function(type, maskObj) {
-        var key = '';
-
-        key += type;
+        var key = type;
 
         if (maskObj.ctrl) { key += '_ctrl'; }
         if (maskObj.alt) { key += '_alt'; }
         if (maskObj.shift) { key += '_shift'; }
 
-        if (maskObj.which && maskObj.which !== 16 && maskObj.which !== 17 && maskObj.which !== 18){
-            key += '_' + maskObj.which;
-        }
+        var keyMaker = function(key, which) {
+            if (which && which !== 16 && which !== 17 && which !== 18) { key += '_' + which; }
+            return key;
+        };
 
-        return key;
+        if ($.isArray(maskObj.which)) {
+            var keys = [];
+            $.each(maskObj.which, function(i, which) {
+                keys.push(keyMaker(key, which));
+            });
+            return keys;
+        } else {
+            return keyMaker(key, maskObj.which);
+        }
     };
 
     var getMaskObject = function(mask) {
@@ -56,12 +96,7 @@
     var checkIsInput = function(target) {
         var name = target.tagName.toLowerCase();
         var type = target.type;
-
-        if ((name === 'input' && (type === 'text' || type === 'password' || type === 'file' || type === 'search')) || name === 'textarea') {
-            return true;
-        } else {
-            return false;
-        }
+        return ((name === 'input' && (type === 'text' || type === 'password' || type === 'file' || type === 'search')) || name === 'textarea') ? true : false;
     };
 
     var run = function(type, e) {
@@ -74,12 +109,12 @@
             which: e.which
         };
 
-        var isInput = checkIsInput(e.target);
         var key = getKey(type, maskObj); // Получаем по типу события и маске ключ
         var shortcuts = active[key]; // Получаем по ключу шорткаты
 
         if (!shortcuts) { return; }
 
+        var isInput = checkIsInput(e.target);
         var isPrevented = false;
 
         $.each(shortcuts, function(i, shortcut) {
@@ -101,25 +136,25 @@
         list = list || 'default';
         active = lists[list]; // Устанавливаем список шорткатов активным
 
-        if (!isStarted) {
-            $(document).bind(($.browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
-                if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) {
-                    e.which = e.which - 32;
-                }
-                if (!pressed[e.which]) {
-                    run('down', e);
-                }
-                pressed[e.which] = true;
-                run('hold', e);
-            });
+        if (isStarted) { return; }
 
-            $(document).bind('keyup.shortcuts', function(e) {
-                pressed[e.which] = false;
-                run('up', e);
-            });
+        $(document).bind(($.browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
+            if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) { // For a-z keydown and keyup the range is 65-90 and for keypress it's 97-122.
+                e.which = e.which - 32;
+            }
+            if (!pressed[e.which]) {
+                run('down', e);
+            }
+            pressed[e.which] = true;
+            run('hold', e);
+        });
 
-            isStarted = true;
-        }
+        $(document).bind('keyup.shortcuts', function(e) {
+            pressed[e.which] = false;
+            run('up', e);
+        });
+
+        isStarted = true;
     };
 
     $.Shortcuts.stop = function() {
@@ -154,23 +189,20 @@
         params.type = params.type || 'down';
         params.list = params.list || 'default';
 
+        if (!lists[params.list]) { lists[params.list] = {}; }
+
+        var list = lists[params.list];
         var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
 
         $.each(masks, function(i, mask) {
             var maskObj = getMaskObject(mask);
-            var key = getKey(params.type, maskObj);
+            var keys = getKey(params.type, maskObj);
+            if (!$.isArray(keys)) { keys = [keys]; }
 
-            if (!lists[params.list]) {
-                lists[params.list] = {};
-            }
-
-            var list = lists[params.list];
-
-            if (!list[key]) {
-                list[key] = [];
-            }
-
-            list[key].push(params);
+            $.each(keys, function(i, key) {
+                if (!list[key]) { list[key] = []; }
+                list[key].push(params);
+            });
         });
     };
 
@@ -192,8 +224,12 @@
 
         $.each(masks, function(i, mask) {
             var maskObj = getMaskObject(mask);
-            var key = getKey(params.type, maskObj);
-            delete lists[params.list][key];
+            var keys = getKey(params.type, maskObj);
+            if (!$.isArray(keys)) { keys = [keys]; }
+
+            $.each(keys, function(i, key) {
+                delete lists[params.list][key];
+            });
         });
     };
 

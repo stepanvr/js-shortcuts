@@ -64,7 +64,7 @@
 <li>Modifiers: <em>Ctrl, Shift, Alt</em></li>
 <li>Numbers: <em>0&mdash;9</em></li>
 <li>Letters: <em>A&mdash;Z (case-insensitive)</em></li>
-<li>Special: <em>Backspace, Tab, Enter, Pause, CapsLock, Esc, Space, PageUp, PageDown, End, Home, Left, Up, Right, Down, Insert, Delete, F1&mdash;F12, ? (Question Mark)</em></li>
+<li>Special: <em>Backspace, Tab, Enter, Pause, CapsLock, Esc, Space, PageUp, PageDown, End, Home, Left, Up, Right, Down, Insert, Delete, F1&mdash;F12, ? (Question Mark), Minus, Plus</em></li>
 </ul>
 
 </div>
@@ -74,21 +74,21 @@
 <h2>Download</h2>
 
 <ul>
-<li><a href="jquery.shortcuts.js">jquery.shortcuts.js</a> (7.9 KB, source code)</li>
-<li><a href="jquery.shortcuts.min.js">jquery.shortcuts.min.js</a> (2.2 KB, minified)</li>
+<li><a href="jquery.shortcuts.js">jquery.shortcuts.js</a> (8.73 KB, source code)</li>
+<li><a href="jquery.shortcuts.min.js">jquery.shortcuts.min.js</a> (2.5 KB, minified)</li>
 </ul>
 
 <h2>Test example</h2>
 
 <div class="list corners active">
     <p>"default" list:</p>
-    <ul><li>Ctrl+A (down)</li><li>Shift+B (up)</li></ul>
+    <ul><li>Ctrl+A (down)</li><li>Minus (down)</li><li>Plus (down)</li></ul>
     <form><input type="hidden" name="list" value="default"/><input type="button" value="Activate"/></form>
 </div>
 
 <div class="list corners">
     <p>"another" list:</p>
-    <ul><li>Shift+Up (hold)</li><li>Delete (down)</li></ul>
+    <ul><li>Delete (down)</li><li>Shift+B (up)</li><li>Shift+Up (hold)</li></ul>
     <form><input type="hidden" name="list" value="another"/><input type="button" value="Activate"/></form>
 </div>
 
@@ -128,20 +128,19 @@ $.Shortcuts.add({
 });
 
 $.Shortcuts.add({
-    type: 'up',
-    mask: 'Shift+B',
+    type: 'down',
+    mask: 'Minus',
     handler: function() {
-        debug('Shift+B');
+        debug('-');
     }
 });
 
 $.Shortcuts.add({
-    type: 'hold',
-    mask: 'Shift+Up',
+    type: 'down',
+    mask: 'Plus',
     handler: function() {
-        debug('Shift+Up');
-    },
-    list: 'another'
+        debug('+');
+    }
 });
 
 $.Shortcuts.add({
@@ -149,6 +148,24 @@ $.Shortcuts.add({
     mask: 'Delete',
     handler: function() {
         debug('Delete');
+    },
+    list: 'another'
+});
+
+$.Shortcuts.add({
+    type: 'up',
+    mask: 'Shift+B',
+    handler: function() {
+        debug('Shift+B');
+    },
+    list: 'another'
+});
+
+$.Shortcuts.add({
+    type: 'hold',
+    mask: 'Shift+Up',
+    handler: function() {
+        debug('Shift+Up');
     },
     list: 'another'
 });
