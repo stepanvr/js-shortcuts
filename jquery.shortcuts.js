@@ -186,22 +186,23 @@
         if (!params.mask) { throw new Error("$.Shortcuts.add: required parameter 'params.mask' is undefined."); }
         if (!params.handler) { throw new Error("$.Shortcuts.add: required parameter 'params.handler' is undefined."); }
 
-        params.type = params.type || 'down';
-        params.list = params.list || 'default';
+        var type = params.type || 'down';
+        var listNames = params.list ? params.list.replace(/\s+/g, '').split(',') : ['default'];
 
-        if (!lists[params.list]) { lists[params.list] = {}; }
+        $.each(listNames, function(i, name) {
+            if (!lists[name]) { lists[name] = {}; }
+            var list = lists[name];
+            var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
 
-        var list = lists[params.list];
-        var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
-
-        $.each(masks, function(i, mask) {
-            var maskObj = getMaskObject(mask);
-            var keys = getKey(params.type, maskObj);
-            if (!$.isArray(keys)) { keys = [keys]; }
-
-            $.each(keys, function(i, key) {
-                if (!list[key]) { list[key] = []; }
-                list[key].push(params);
+            $.each(masks, function(i, mask) {
+                var maskObj = getMaskObject(mask);
+                var keys = getKey(type, maskObj);
+                if (!$.isArray(keys)) { keys = [keys]; }
+    
+                $.each(keys, function(i, key) {
+                    if (!list[key]) { list[key] = []; }
+                    list[key].push(params);
+                });
             });
         });
     };
@@ -215,20 +216,22 @@
      */
     $.Shortcuts.remove = function(params) {
         if (!params.mask) { throw new Error("$.Shortcuts.remove: required parameter 'params.mask' is undefined."); }
-        params.type = params.type || 'down';
-        params.list = params.list || 'default';
 
-        if (!lists[params.list]) { return; }
+        var type = params.type || 'down';
+        var listNames = params.list ? params.list.replace(/\s+/g, '').split(',') : ['default'];
 
-        var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
+        $.each(listNames, function(i, name) {
+            if (!lists[name]) { return true; } // continue
+            var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
 
-        $.each(masks, function(i, mask) {
-            var maskObj = getMaskObject(mask);
-            var keys = getKey(params.type, maskObj);
-            if (!$.isArray(keys)) { keys = [keys]; }
+            $.each(masks, function(i, mask) {
+                var maskObj = getMaskObject(mask);
+                var keys = getKey(type, maskObj);
+                if (!$.isArray(keys)) { keys = [keys]; }
 
-            $.each(keys, function(i, key) {
-                delete lists[params.list][key];
+                $.each(keys, function(i, key) {
+                    delete lists[name][key];
+                });
             });
         });
     };
