@@ -1,15 +1,15 @@
 /**
- * JavaScript Shortcuts Library (jQuery plugin) v0.5
+ * JavaScript Shortcuts Library (jQuery plugin) v0.7
  * http://www.stepanreznikov.com/js-shortcuts/
  * Copyright (c) 2010 Stepan Reznikov (stepan.reznikov@gmail.com)
- * Date: 2010-04-04
+ * Date: 2010-08-08
  */
 
 /*global jQuery */
 
 (function($) {
 
-    /** Специальные клавиши */
+    /** Special keys */
     var special = {
         'backspace': 8,
         'tab': 9,
@@ -40,20 +40,21 @@
         'f10': 121,
         'f11': 122,
         'f12': 123,
-        '?': 191, // Question Mark
+        '?': 191, // Question mark
         'minus': $.browser.opera ? [109, 45] : $.browser.mozilla ? 109 : [189, 109],
         'plus': $.browser.opera ? [61, 43] : $.browser.mozilla ? [61, 107] : [187, 107]
     };
 
-    /** Хеш со списками шорткатов */
+    /** Hash for shortcut lists */
     var lists = {};
 
-    /** В этом хеше запоминаем какие клавиши нажаты в данный момент. Ключ - ASCII-код клавиши (e.which), значение - true/false. */
+    /** Active shortcut list */
+    var active;
+
+    /** Hash for storing which keys are pressed at the moment. Key - ASCII key code (e.which), value - true/false. */
     var pressed = {};
 
     var isStarted = false;
-
-    var active;
 
     var getKey = function(type, maskObj) {
         var key = type;
@@ -96,7 +97,7 @@
     var checkIsInput = function(target) {
         var name = target.tagName.toLowerCase();
         var type = target.type;
-        return ((name === 'input' && (type === 'text' || type === 'password' || type === 'file' || type === 'search')) || name === 'textarea') ? true : false;
+        return (name === 'input' && $.inArray(type, ['text', 'password', 'file', 'search']) > -1) || name === 'textarea';
     };
 
     var run = function(type, e) {
@@ -109,8 +110,8 @@
             which: e.which
         };
 
-        var key = getKey(type, maskObj); // Получаем по типу события и маске ключ
-        var shortcuts = active[key]; // Получаем по ключу шорткаты
+        var key = getKey(type, maskObj);
+        var shortcuts = active[key]; // Get shortcuts from the active list.
 
         if (!shortcuts) { return; }
 
@@ -118,28 +119,32 @@
         var isPrevented = false;
 
         $.each(shortcuts, function(i, shortcut) {
-            // Если не в инпуте или для данного шортката разрешено выполнение в инпутах
+            // If not in input or this shortcut is enabled in inputs.
             if (!isInput || shortcut.enableInInput) {
                 if (!isPrevented) {
                     e.preventDefault();
                     isPrevented = true;
                 }
-                shortcut.handler(e); // Выполняем шорткат
+                shortcut.handler(e); // Run the shortcut's handler.
             }
         });
     };
 
     $.Shortcuts = {};
 
-    /** Начать реагировать на шорткаты. Навешиваем обработчики событий. */
+    /**
+     * Start reacting to shortcuts in the specified list.
+     * @param {String} [list] List name
+     */
     $.Shortcuts.start = function(list) {
         list = list || 'default';
-        active = lists[list]; // Устанавливаем список шорткатов активным
+        active = lists[list]; // Set the list as active.
 
-        if (isStarted) { return; }
+        if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
         $(document).bind(($.browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
-            if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) { // For a-z keydown and keyup the range is 65-90 and for keypress it's 97-122.
+            // For a-z keydown and keyup the range is 65-90 and for keypress it's 97-122.
+            if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) {
                 e.which = e.which - 32;
             }
             if (!pressed[e.which]) {
@@ -155,32 +160,37 @@
         });
 
         isStarted = true;
-    };
 
-    $.Shortcuts.stop = function() {
-        $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
-        isStarted = false;
+        return this;
     };
 
     /**
-     * Добавить шорткат.
-     * @param {Object}   params Параметры шортката.
-     * @param {String}  [params.type] Тип события по которому будет срабатывать обработчик.
-     *     Возможные значения:
-     *     down – На нажатие клавиши (сочетания клавиш). Значение по умолчанию.
-     *     up   – На отпускание клавиши.
-     *     hold – На нажатие и удержание клавиши. Обработчик будет вызван сразу после нажатия
-     *            и потом будет вызываться с некоторой периодичностью пока нажата клавиша.
+     * Stop reacting to shortcuts (unbind event handlers).
+     */
+    $.Shortcuts.stop = function() {
+        $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
+        isStarted = false;
+        return this;
+    };
+
+    /**
+     * Add a shortcut.
+     * @param {Object}   params         Shortcut parameters.
+     * @param {String}  [params.type]   The type of event to be used for running the shortcut's handler.
+     *     Possible values:
+     *     down – On key down (default value).
+     *     up   – On key up.
+     *     hold – On pressing and holding down the key. The handler will be called immediately
+     *            after pressing the key and then repeatedly while the key is held down.
      * 
-     * @param {String}   params.mask Строка задающая сочетание клавиш.
-     *     Примеры: 'Down', 'Esc', 'Shift+Up', 'ctrl+a'.
-     *     Строка состоит из имен клавиш разделенных плюсами.
-     *     Может быть не более одной клавиши отличной от Ctrl, Shift или Alt.
-     *     Строка нечувствительна к регистру.
+     * @param {String}   params.mask    A string specifying the key combination.
+     *     Consists of key names separated by a plus sign. Case insensitive.
+     *     Examples: 'Down', 'Esc', 'Shift+Up', 'ctrl+a'.
      * 
-     * @param {Boolean} [params.enableInInput] Разрешить выполнение шортката внутри полей ввода. По умолчанию запрещено.
-     * @param {Function} params.handler Обработчик события. В качестве первого параметра будет передан event object.
-     * @param {String}  [params.list] В какой список добавить шорткат. По умолчанию шорткат заносится в список default.
+     * @param {Function} params.handler A function to be called when the key combination is pressed. The event object will be passed to it.
+     * @param {String}  [params.list]   You can organize your shortcuts into lists and then switch between them.
+     *     By default shortcuts are added to the 'default' list.
+     * @param {Boolean} [params.enableInInput] Whether to enable execution of the shortcut in input fields and textareas. Disabled by default.
      */
     $.Shortcuts.add = function(params) {
         if (!params.mask) { throw new Error("$.Shortcuts.add: required parameter 'params.mask' is undefined."); }
@@ -205,14 +215,16 @@
                 });
             });
         });
+
+        return this;
     };
 
     /**
-     * Удалить шорткат.
-     * @param {Object}  params       Параметры.
-     * @param {String} [params.type] Тип события (down|up|hold). По умолчанию down.
-     * @param {String}  params.mask  Строка задающая сочетание клавиш.
-     * @param {String} [params.list] Из какого списка удалить шорткат. По умолчанию default.
+     * Remove a shortcut.
+     * @param {Object}  params       Shortcut parameters.
+     * @param {String} [params.type] Event type (down|up|hold). Default: 'down'.
+     * @param {String}  params.mask  Key combination.
+     * @param {String} [params.list] A list from which to remove the shortcut. Default: 'default'.
      */
     $.Shortcuts.remove = function(params) {
         if (!params.mask) { throw new Error("$.Shortcuts.remove: required parameter 'params.mask' is undefined."); }
@@ -234,6 +246,8 @@
                 });
             });
         });
+
+        return this;
     };
 
 }(jQuery));

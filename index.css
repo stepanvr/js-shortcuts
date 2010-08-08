@@ -78,17 +78,26 @@ ul li {
     width: 100%;
 }
 
-#usage, #example {
+#col1, #col2, #col3 {
     float: left;
-    width: 49%;
 }
 
-#usage {
+#col1 {
+    width: 25%;
+}
+
+#col1, #col2 {
     margin-right: -100%;
 }
 
-#example {
-    margin-left: 50%;
+#col2 {
+    margin-left: 30%;
+    width: 35%;
+}
+
+#col3 {
+    margin-left: 70%;
+    width: 30%;
 }
 
 .corners {
@@ -99,9 +108,14 @@ ul li {
 
 .list {
     float: left;
-    padding: 1em;
-    margin: 0 1em 1em 0;
+    padding: 0.5em;
+    margin: 0 0.5em 1em 0;
     background-color: #e5e5e5;
+}
+
+.list form {
+    padding: 0;
+    margin: 0;
 }
 
 .active {

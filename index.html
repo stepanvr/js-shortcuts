@@ -13,11 +13,11 @@
 <h1>JavaScript Shortcuts Library <small>(jQuery plugin)</small></h1>
 
 <div class="columns">
-<div id="usage">
+<div id="col1">
 
 <h2>Usage</h2>
 
-<h3>Add a shortcut to the "default" list:</h3>
+<h3>Add a shortcut:</h3>
 
 <pre style='color:#000000;background:#ffffff;'>$.Shortcuts.add({
     type: <span style='color:#2a00ff;'>'down'</span>,
@@ -31,7 +31,7 @@
 
 <pre style='color:#000000;background:#ffffff;'>$.Shortcuts.start();</pre>
 
-<h3>Add a shortcut to "another" list:</h3>
+<h3>Add a shortcut to &ldquo;another&rdquo; list:</h3>
 
 <pre style='color:#000000;background:#ffffff;'>$.Shortcuts.add({
     type: <span style='color:#2a00ff;'>'hold'</span>,
@@ -42,7 +42,7 @@
     list: <span style='color:#2a00ff;'>'another'</span>
 });</pre>
 
-<h3>Activate "another" list:</h3>
+<h3>Activate &ldquo;another&rdquo; list:</h3>
 
 <pre style='color:#000000;background:#ffffff;'>$.Shortcuts.start(<span style='color:#2a00ff;'>'another'</span>);</pre>
 
@@ -54,11 +54,25 @@
     list: <span style='color:#2a00ff;'>'another'</span>
 });</pre>
 
-<h3>Stop (unbind event listeners):</h3>
+<h3>Stop (unbind event handlers):</h3>
 
 <pre style='color:#000000;background:#ffffff;'>$.Shortcuts.stop();</pre>
 
-<h3>Supported Keys</h3>
+</div>
+
+<div id="col2">
+
+<h2>Features</h2>
+
+<h3>Event types</h3>
+
+<ul>
+<li><strong>down</strong>&nbsp;&mdash; On key down (default value).</li>
+<li><strong>up</strong>&nbsp;&mdash; On key up.</li>
+<li><strong>hold</strong>&nbsp;&mdash; On pressing and holding down the key. The handler will be called immediately after pressing the key and then repeatedly while the key is held down.</li>
+</ul>
+
+<h3>Supported keys</h3>
 
 <ul>
 <li>Modifiers: <em>Ctrl, Shift, Alt</em></li>
@@ -67,27 +81,59 @@
 <li>Special: <em>Backspace, Tab, Enter, Pause, CapsLock, Esc, Space, PageUp, PageDown, End, Home, Left, Up, Right, Down, Insert, Delete, F1&mdash;F12, ? (Question Mark), Minus, Plus</em></li>
 </ul>
 
+<h3>Multiple key combinations and multiple lists:</h3>
+
+<pre style='color:#000000;background:#ffffff;'>$.Shortcuts.add({
+    type: <span style='color:#2a00ff;'>'hold'</span>,
+    mask: <span style='color:#2a00ff;'>'Shift+Up,Shift+Down'</span>,
+    handler: <span style='color:#7f0055; font-weight:bold;'>function</span>() {
+        doSomething();
+    },
+    list: <span style='color:#2a00ff;'>'first,second'</span>
+});</pre>
+
+<h3>Chaining:</h3>
+
+<pre style='color:#000000;background:#ffffff;'>$.Shortcuts.add({
+    type: <span style='color:#2a00ff;'>'down'</span>,
+    mask: <span style='color:#2a00ff;'>'Ctrl+A'</span>,
+    handler: <span style='color:#7f0055; font-weight:bold;'>function</span>() {
+        debug(<span style='color:#2a00ff; '>'Ctrl+A'</span>);
+    }
+}).start();</pre>
+
+<h3>Enable/disable shortcuts in input fields and textareas:</h3>
+
+<pre style='color:#000000;background:#ffffff;'>$.Shortcuts.add({
+    type: <span style='color:#2a00ff;'>'down'</span>,
+    mask: <span style='color:#2a00ff;'>'Ctrl+S'</span>,
+    enableInInput: <span style='color:#7f0055; font-weight:bold;'>true</span>,
+    handler: <span style='color:#7f0055; font-weight:bold;'>function</span>() {
+        debug(<span style='color:#2a00ff;'>'Ctrl+S'</span>);
+    }
+});</pre>
+
 </div>
 
-<div id="example">
+<div id="col3">
 
 <h2>Download</h2>
 
 <ul>
-<li><a href="jquery.shortcuts.js">jquery.shortcuts.js</a> (8.73 KB, source code)</li>
-<li><a href="jquery.shortcuts.min.js">jquery.shortcuts.min.js</a> (2.5 KB, minified)</li>
+<li><a href="jquery.shortcuts.js">jquery.shortcuts.js</a> (8.14 KB, source)</li>
+<li><a href="jquery.shortcuts.min.js">jquery.shortcuts.min.js</a> (2.62 KB, minified)</li>
 </ul>
 
 <h2>Test example</h2>
 
 <div class="list corners active">
-    <p>"default" list:</p>
+    <p>&ldquo;default&rdquo; list:</p>
     <ul><li>Ctrl+A (down)</li><li>Minus (down)</li><li>Plus (down)</li></ul>
     <form><input type="hidden" name="list" value="default"/><input type="button" value="Activate"/></form>
 </div>
 
 <div class="list corners">
-    <p>"another" list:</p>
+    <p>&ldquo;another&rdquo; list:</p>
     <ul><li>Delete (down)</li><li>Shift+B (up)</li><li>Shift+Up (hold)</li></ul>
     <form><input type="hidden" name="list" value="another"/><input type="button" value="Activate"/></form>
 </div>
@@ -100,7 +146,7 @@
 
 </div></div>
 
-<div id="footer"><p>Feedback: @ <a href="mailto:stepan.reznikov@gmail.com">Stepan Reznikov</a> | <a href="http://github.com/stepanvr/js-shortcuts">GitHub</a></p></div>
+<div id="footer"><p>Feedback is welcome. @ <a href="mailto:stepan.reznikov@gmail.com">Stepan Reznikov</a> | <a href="http://github.com/stepanvr/js-shortcuts">GitHub</a></p></div>
 
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
 <script type="text/javascript" src="jquery.shortcuts.min.js"></script>
