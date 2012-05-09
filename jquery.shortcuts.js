@@ -48,8 +48,8 @@
     /** Hash for shortcut lists */
     var lists = {};
 
-    /** Active shortcut list */
-    var active;
+    /** Active shortcut lists */
+    var active = [];
 
     /** Hash for storing which keys are pressed at the moment. Key - ASCII key code (e.which), value - true/false. */
     var pressed = {};
@@ -101,7 +101,7 @@
     };
 
     var run = function(type, e) {
-        if (!active) { return; }
+        if (active.length === 0) { return; }
 
         var maskObj = {
             ctrl: e.ctrlKey,
@@ -111,7 +111,14 @@
         };
 
         var key = getKey(type, maskObj);
-        var shortcuts = active[key]; // Get shortcuts from the active list.
+
+        var shortcuts;
+        // Get shortcuts from the active lists.
+        active.forEach(function(list){
+            if(list[key]){
+                shortcuts=list[key];
+            }
+        });
 
         if (!shortcuts) { return; }
 
@@ -125,7 +132,7 @@
                     e.preventDefault();
                     isPrevented = true;
                 }
-                shortcut.handler(e); // Run the shortcut's handler.
+                shortcut.handler(shortcut, e); // Run the shortcut's handler.
             }
         });
     };
@@ -138,7 +145,7 @@
      */
     $.Shortcuts.start = function(list) {
         list = list || 'default';
-        active = lists[list]; // Set the list as active.
+        active.push(lists[list]); // Set the list as active.
 
         if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
@@ -167,9 +174,14 @@
     /**
      * Stop reacting to shortcuts (unbind event handlers).
      */
-    $.Shortcuts.stop = function() {
-        $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
-        isStarted = false;
+    $.Shortcuts.stop = function(list) {
+        list = list || 'default';
+        active.remove(lists[list]);
+
+        if(active.length===0){
+            $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
+            isStarted = false;
+        }
         return this;
     };
 
