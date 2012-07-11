@@ -48,8 +48,8 @@
     /** Hash for shortcut lists */
     var lists = {};
 
-    /** Active shortcut list */
-    var active;
+    /** Active shortcut lists */
+    var active = {};
 
     /** Hash for storing which keys are pressed at the moment. Key - ASCII key code (e.which), value - true/false. */
     var pressed = {};
@@ -101,7 +101,7 @@
     };
 
     var run = function(type, e) {
-        if (!active) { return; }
+        if (active.length === 0) { return; }
 
         var maskObj = {
             ctrl: e.ctrlKey,
@@ -111,7 +111,14 @@
         };
 
         var key = getKey(type, maskObj);
-        var shortcuts = active[key]; // Get shortcuts from the active list.
+
+        var shortcuts;
+
+        $.each(active, function(list, list_activated) {
+          if (list_activated === true && lists[list][key]) {
+            shortcuts = lists[list][key];
+          }
+        });
 
         if (!shortcuts) { return; }
 
@@ -125,7 +132,7 @@
                     e.preventDefault();
                     isPrevented = true;
                 }
-                shortcut.handler(e); // Run the shortcut's handler.
+                shortcut.handler(shortcut, e); // Run the shortcut's handler.
             }
         });
     };
@@ -138,7 +145,9 @@
      */
     $.Shortcuts.start = function(list) {
         list = list || 'default';
-        active = lists[list]; // Set the list as active.
+
+        // Set the list as active.
+        active[list] = true;
 
         if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
@@ -167,9 +176,22 @@
     /**
      * Stop reacting to shortcuts (unbind event handlers).
      */
-    $.Shortcuts.stop = function() {
-        $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
-        isStarted = false;
+    $.Shortcuts.stop = function(list) {
+        list = list || 'default';
+        active[list] = false;
+
+        var has_active = false;
+
+        $.each(active, function(list, list_activated) {
+          if (list_activated === true) {
+            has_active = true
+          }
+        });
+
+        if(has_active === false){
+            $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
+            isStarted = false;
+        }
         return this;
     };
 
@@ -200,7 +222,10 @@
         var listNames = params.list ? params.list.replace(/\s+/g, '').split(',') : ['default'];
 
         $.each(listNames, function(i, name) {
-            if (!lists[name]) { lists[name] = {}; }
+            if (!lists[name]) {
+              lists[name] = {};
+              active[name] = false;
+            }
             var list = lists[name];
             var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
 
