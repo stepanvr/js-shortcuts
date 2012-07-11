@@ -151,7 +151,7 @@
 
         // Set the lists as active
         $.each(active, function(k, v) {
-          if (list.indexOf(k) !== -1)
+          if ($.inArray(k, list) !== -1)
             active[k] = true;
           else
             active[k] = (replace === true ? false : active[k]);
