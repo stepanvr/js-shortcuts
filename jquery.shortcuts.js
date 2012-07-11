@@ -101,8 +101,6 @@
     };
 
     var run = function(type, e) {
-        if (active.length === 0) { return; }
-
         var maskObj = {
             ctrl: e.ctrlKey,
             alt: e.altKey,
@@ -141,13 +139,23 @@
 
     /**
      * Start reacting to shortcuts in the specified list.
-     * @param {String} [list] List name
+     * @param {String|Array} [list] List name or array of names
+     * @param {Boolean} [list] Should we replace the list of active lists?
      */
-    $.Shortcuts.start = function(list) {
-        list = list || 'default';
+    $.Shortcuts.start = function(list, replace) {
+        if (list === undefined)
+          list = 'default';
 
-        // Set the list as active.
-        active[list] = true;
+        if (typeof(list) === 'string')
+          list = [list]
+
+        // Set the lists as active
+        $.each(active, function(k, v) {
+          if (list.indexOf(k) !== -1)
+            active[k] = true;
+          else
+            active[k] = (replace === true ? false : active[k]);
+        });
 
         if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
@@ -173,9 +181,9 @@
         return this;
     };
 
-    /**
-     * Stop reacting to shortcuts (unbind event handlers).
-     */
+   /**
+    * Stop reacting to shortcuts (unbind event handlers).
+    */
     $.Shortcuts.stop = function(list) {
         list = list || 'default';
         active[list] = false;
@@ -193,6 +201,22 @@
             isStarted = false;
         }
         return this;
+    };
+
+   /**
+    * Return the list of active lists
+    * @return {Array}
+    */
+    $.Shortcuts.getActiveLists = function() {
+      var activies = [];
+
+      $.each(active, function(list, list_activated) {
+        if (list_activated === true) {
+          activies.push(list);
+        }
+      });
+
+      return activies;
     };
 
     /**
