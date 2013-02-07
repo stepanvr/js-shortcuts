@@ -51,6 +51,9 @@
     /** Active shortcut list */
     var active;
 
+    /** Registered list stack that we can use to activate later*/
+    var registered = [];
+
     /** Hash for storing which keys are pressed at the moment. Key - ASCII key code (e.which), value - true/false. */
     var pressed = {};
 
@@ -130,6 +133,18 @@
         });
     };
 
+    var registerList = function(list){
+        //get the list index in registered lists array
+        var indexInRegisteredList = jQuery.inArray(lists[list], registered);
+
+        //put the list in the last position or top of the registered stack so we can go back to it later
+        if(indexInRegisteredList > -1){
+            registered.remove(lists[list]);
+        }
+        registered.push(lists[list]);
+
+    };
+
     $.Shortcuts = {};
 
     /**
@@ -139,6 +154,8 @@
     $.Shortcuts.start = function(list) {
         list = list || 'default';
         active = lists[list]; // Set the list as active.
+
+        registerList(list);
 
         if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
@@ -170,6 +187,27 @@
     $.Shortcuts.stop = function() {
         $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
         isStarted = false;
+        registered = [];
+        return this;
+    };
+
+    /**
+     * Remove shortcut list and reactivate previously started list.
+     */
+    $.Shortcuts.removeList = function(list) {
+        list = list || 'default';
+
+        registered.remove(lists[list]);
+        delete lists[list];
+
+        //Reactivate previous list if there is one
+        if (registered.length > 0) {
+            active = registered[registered.length - 1];
+        } else {
+            active = {};
+            $.Shortcuts.stop();
+        }
+
         return this;
     };
 
@@ -182,11 +220,11 @@
      *     up   – On key up.
      *     hold – On pressing and holding down the key. The handler will be called immediately
      *            after pressing the key and then repeatedly while the key is held down.
-     * 
+     *
      * @param {String}   params.mask    A string specifying the key combination.
      *     Consists of key names separated by a plus sign. Case insensitive.
      *     Examples: 'Down', 'Esc', 'Shift+Up', 'ctrl+a'.
-     * 
+     *
      * @param {Function} params.handler A function to be called when the key combination is pressed. The event object will be passed to it.
      * @param {String}  [params.list]   You can organize your shortcuts into lists and then switch between them.
      *     By default shortcuts are added to the 'default' list.
@@ -208,7 +246,7 @@
                 var maskObj = getMaskObject(mask);
                 var keys = getKey(type, maskObj);
                 if (!$.isArray(keys)) { keys = [keys]; }
-    
+
                 $.each(keys, function(i, key) {
                     if (!list[key]) { list[key] = []; }
                     list[key].push(params);
