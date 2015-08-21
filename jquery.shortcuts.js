@@ -1,13 +1,20 @@
 /**
- * JavaScript Shortcuts Library (jQuery plugin) v0.7
+ * JavaScript Shortcuts Library (jQuery plugin) v0.8
  * http://www.stepanreznikov.com/js-shortcuts/
  * Copyright (c) 2010 Stepan Reznikov (stepan.reznikov@gmail.com)
- * Date: 2010-08-08
+ * Date: 2015-08-21
  */
 
 /*global jQuery */
 
 (function($) {
+
+    var browser = {
+        mozilla : /firefox/.test(navigator.userAgent.toLowerCase()),
+        webkit : /webkit/.test(navigator.userAgent.toLowerCase()),
+        opera : /opera/.test(navigator.userAgent.toLowerCase()),
+        msie : /msie/.test(navigator.userAgent.toLowerCase()),
+    }
 
     /** Special keys */
     var special = {
@@ -41,8 +48,8 @@
         'f11': 122,
         'f12': 123,
         '?': 191, // Question mark
-        'minus': $.browser.opera ? [109, 45] : $.browser.mozilla ? 109 : [189, 109],
-        'plus': $.browser.opera ? [61, 43] : $.browser.mozilla ? [61, 107] : [187, 107]
+        'minus': browser.opera ? [109, 45] : browser.mozilla ? 109 : [189, 109],
+        'plus': browser.opera ? [61, 43] : browser.mozilla ? [61, 107] : [187, 107]
     };
 
     /** Hash for shortcut lists */
@@ -142,7 +149,7 @@
 
         if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
-        $(document).bind(($.browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
+        $(document).bind((browser.opera ? 'keypress' : 'keydown') + '.shortcuts', function(e) {
             // For a-z keydown and keyup the range is 65-90 and for keypress it's 97-122.
             if (e.type === 'keypress' && e.which >= 97 && e.which <= 122) {
                 e.which = e.which - 32;
