@@ -48,8 +48,8 @@
     /** Hash for shortcut lists */
     var lists = {};
 
-    /** Active shortcut list */
-    var active;
+    /** Active shortcut lists */
+    var active = {};
 
     /** Hash for storing which keys are pressed at the moment. Key - ASCII key code (e.which), value - true/false. */
     var pressed = {};
@@ -101,8 +101,6 @@
     };
 
     var run = function(type, e) {
-        if (!active) { return; }
-
         var maskObj = {
             ctrl: e.ctrlKey,
             alt: e.altKey,
@@ -111,7 +109,14 @@
         };
 
         var key = getKey(type, maskObj);
-        var shortcuts = active[key]; // Get shortcuts from the active list.
+
+        var shortcuts;
+
+        $.each(active, function(list, list_activated) {
+          if (list_activated === true && lists[list] && lists[list][key]) {
+            shortcuts = lists[list][key];
+          }
+        });
 
         if (!shortcuts) { return; }
 
@@ -125,7 +130,7 @@
                     e.preventDefault();
                     isPrevented = true;
                 }
-                shortcut.handler(e); // Run the shortcut's handler.
+                shortcut.handler(shortcut, e); // Run the shortcut's handler.
             }
         });
     };
@@ -134,11 +139,23 @@
 
     /**
      * Start reacting to shortcuts in the specified list.
-     * @param {String} [list] List name
+     * @param {String|Array} [list] List name or array of names
+     * @param {Boolean} [list] Should we replace the list of active lists?
      */
-    $.Shortcuts.start = function(list) {
-        list = list || 'default';
-        active = lists[list]; // Set the list as active.
+    $.Shortcuts.start = function(list, replace) {
+        if (list === undefined)
+          list = 'default';
+
+        if (typeof(list) === 'string')
+          list = [list]
+
+        // Set the lists as active
+        $.each(active, function(k, v) {
+          if ($.inArray(k, list) !== -1)
+            active[k] = true;
+          else
+            active[k] = (replace === true ? false : active[k]);
+        });
 
         if (isStarted) { return; } // We are going to attach event handlers only once, the first time this method is called.
 
@@ -164,13 +181,42 @@
         return this;
     };
 
-    /**
-     * Stop reacting to shortcuts (unbind event handlers).
-     */
-    $.Shortcuts.stop = function() {
-        $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
-        isStarted = false;
+   /**
+    * Stop reacting to shortcuts (unbind event handlers).
+    */
+    $.Shortcuts.stop = function(list) {
+        list = list || 'default';
+        active[list] = false;
+
+        var has_active = false;
+
+        $.each(active, function(list, list_activated) {
+          if (list_activated === true) {
+            has_active = true
+          }
+        });
+
+        if(has_active === false){
+            $(document).unbind('keypress.shortcuts keydown.shortcuts keyup.shortcuts');
+            isStarted = false;
+        }
         return this;
+    };
+
+   /**
+    * Return the list of active lists
+    * @return {Array}
+    */
+    $.Shortcuts.getActiveLists = function() {
+      var activies = [];
+
+      $.each(active, function(list, list_activated) {
+        if (list_activated === true) {
+          activies.push(list);
+        }
+      });
+
+      return activies;
     };
 
     /**
@@ -200,7 +246,10 @@
         var listNames = params.list ? params.list.replace(/\s+/g, '').split(',') : ['default'];
 
         $.each(listNames, function(i, name) {
-            if (!lists[name]) { lists[name] = {}; }
+            if (!lists[name]) {
+              lists[name] = {};
+              active[name] = false;
+            }
             var list = lists[name];
             var masks = params.mask.toLowerCase().replace(/\s+/g, '').split(',');
 
